@@ -1,0 +1,55 @@
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            # ── AUTH SERVICE ──────────────────────────────────────────────────
+            # Tutte le chiamate a /api/auth/** vengono inoltrate ad auth-service.
+            # "lb://auth-service" significa Load Balanced: il Gateway chiede a Eureka
+            # l'indirizzo attuale di AUTH-SERVICE invece di usare un IP fisso.
+            # Questo è il vantaggio principale di combinare Gateway + Eureka:
+            # se in futuro avvii più istanze di auth-service, il Gateway
+            # bilancia automaticamente il carico tra di esse.
+            - id: auth-service-route
+              uri: lb://auth-service
+              predicates:
+                # Predicate = condizione: questa rotta si attiva solo se il path inizia con /api/auth/
+                - Path=/api/auth/**
+
+            # ── FILE SERVICE ──────────────────────────────────────────────────
+            # Tutte le chiamate a /api/files/** vengono inoltrate a file-service.
+            - id: file-service-route
+              uri: lb://file-service
+              predicates:
+                - Path=/api/files/**
+
+server:
+  # Porta "pubblica" dell'applicazione: il frontend chiamerà sempre questa,
+  # senza sapere nulla di auth-service (8081) o file-service (8082).
+  port: 8080
+
+eureka:
+  client:
+    service-url:
+      # Dove trovare Eureka Server per registrarsi e scoprire gli altri servizi
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+jwt:
+  # Letto esclusivamente dalla variabile d'ambiente JWT_SECRET definita nel file .env.
+  # Deve essere identico a quello di auth-service: entrambi firmano/verificano
+  # con la stessa chiave. Senza fallback — se JWT_SECRET manca, l'app non parte.
+  secret: ${JWT_SECRET}
+
+# Endpoint che il Gateway lascia passare senza controllare il JWT.
+# Login, register e refresh servono proprio per ottenere/rinnovare i token,
+# quindi non possono richiederne uno come prerequisito.
+gateway:
+  public-paths:
+    - /api/auth/login
+    - /api/auth/register
+    - /api/auth/refresh
