@@ -1,6 +1,5 @@
 package com.gateway.api_gateway.security;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -10,7 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
+import java.util.Set;
 
 // GlobalFilter: si applica automaticamente a TUTTE le rotte del Gateway,
 // senza doverlo dichiarare rotta per rotta in application.yaml.
@@ -25,16 +24,19 @@ import java.util.List;
 @Component
 public class JwtAuthFilter implements GlobalFilter, Ordered {
 
+    // Endpoint che non richiedono JWT — usare Set per lookup O(1).
+    // Hardcoded invece di letti da YAML: @Value con List<String> e sintassi
+    // YAML a trattini non è affidabile in Spring Boot (causa PlaceholderResolutionException).
+    private static final Set<String> PUBLIC_PATHS = Set.of(
+            "/api/auth/login",
+            "/api/auth/register",
+            "/api/auth/refresh"
+    );
+
     private final JwtUtil jwtUtil;
 
-    // Lista degli endpoint pubblici letti da application.yaml.
-    // Questi path passano senza JWT — sono login, register e refresh.
-    private final List<String> publicPaths;
-
-    public JwtAuthFilter(JwtUtil jwtUtil,
-                         @Value("${gateway.public-paths}") List<String> publicPaths) {
+    public JwtAuthFilter(JwtUtil jwtUtil) {
         this.jwtUtil = jwtUtil;
-        this.publicPaths = publicPaths;
     }
 
     @Override
@@ -81,7 +83,7 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
     }
 
     private boolean isPublicPath(String path) {
-        return publicPaths.stream().anyMatch(path::equals);
+        return PUBLIC_PATHS.contains(path);
     }
 
     // Termina la richiesta con 401 Unauthorized senza inoltrarla al servizio downstream.

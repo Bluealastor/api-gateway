@@ -44,12 +44,3 @@ jwt:
   # Deve essere identico a quello di auth-service: entrambi firmano/verificano
   # con la stessa chiave. Senza fallback — se JWT_SECRET manca, l'app non parte.
   secret: ${JWT_SECRET}
-
-# Endpoint che il Gateway lascia passare senza controllare il JWT.
-# Login, register e refresh servono proprio per ottenere/rinnovare i token,
-# quindi non possono richiederne uno come prerequisito.
-gateway:
-  public-paths:
-    - /api/auth/login
-    - /api/auth/register
-    - /api/auth/refresh
