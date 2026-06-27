@@ -15,7 +15,9 @@ import java.util.List;
 // Spring legge il blocco "gateway:" dal YAML e popola automaticamente i campi
 // di questa classe. Il campo "publicPaths" si mappa su "public-paths" nel YAML
 // grazie al relaxed binding di Spring Boot (kebab-case → camelCase).
-@Component
+// CLASSE DISABILITATA — sostituita da PublicPathsProperties.java
+// @Component rimosso per evitare conflitto con il bean "gatewayProperties"
+// registrato internamente da Spring Cloud Gateway (GatewayAutoConfiguration).
 @ConfigurationProperties(prefix = "gateway")
 public class GatewayProperties {
 

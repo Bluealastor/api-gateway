@@ -1,6 +1,6 @@
 package com.gateway.api_gateway.security;
 
-import com.gateway.api_gateway.config.GatewayProperties;
+import com.gateway.api_gateway.config.PublicPathsProperties;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -27,11 +27,11 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
 
     // GatewayProperties legge "gateway.public-paths" dal YAML tramite
     // @ConfigurationProperties — supporta liste, a differenza di @Value.
-    private final GatewayProperties gatewayProperties;
+    private final PublicPathsProperties publicPathsProperties;
 
-    public JwtAuthFilter(JwtUtil jwtUtil, GatewayProperties gatewayProperties) {
+    public JwtAuthFilter(JwtUtil jwtUtil, PublicPathsProperties publicPathsProperties) {
         this.jwtUtil = jwtUtil;
-        this.gatewayProperties = gatewayProperties;
+        this.publicPathsProperties = publicPathsProperties;
     }
 
     @Override
@@ -78,7 +78,7 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
     }
 
     private boolean isPublicPath(String path) {
-        return gatewayProperties.getPublicPaths().contains(path);
+        return publicPathsProperties.getPublicPaths().contains(path);
     }
 
     // Termina la richiesta con 401 Unauthorized senza inoltrarla al servizio downstream.
