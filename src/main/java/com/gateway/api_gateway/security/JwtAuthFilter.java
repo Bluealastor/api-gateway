@@ -43,16 +43,21 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
             return chain.filter(exchange);
         }
 
-        // Legge l'header Authorization dalla richiesta
+        // Legge l'header Authorization dalla richiesta.
+        // Fallback: se l'header manca, controlla il query param ?token=
+        // (usato da client come VLC che non supportano header HTTP custom).
         String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+        String token;
 
-        // Se l'header manca o non inizia con "Bearer ", risponde 401
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return unauthorized(exchange);
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+        } else {
+            String queryToken = exchange.getRequest().getQueryParams().getFirst("token");
+            if (queryToken == null || queryToken.isBlank()) {
+                return unauthorized(exchange);
+            }
+            token = queryToken;
         }
-
-        // Estrae il token grezzo rimuovendo il prefisso "Bearer "
-        String token = authHeader.substring(7);
 
         // Valida la firma e la scadenza del token
         if (!jwtUtil.isTokenValid(token)) {
