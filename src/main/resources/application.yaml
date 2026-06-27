@@ -44,3 +44,12 @@ jwt:
   # Deve essere identico a quello di auth-service: entrambi firmano/verificano
   # con la stessa chiave. Senza fallback — se JWT_SECRET manca, l'app non parte.
   secret: ${JWT_SECRET}
+
+# Endpoint che il Gateway lascia passare senza controllare il JWT.
+# Letti da GatewayProperties tramite @ConfigurationProperties(prefix = "gateway"),
+# che supporta liste YAML correttamente (a differenza di @Value).
+gateway:
+  public-paths:
+    - /api/auth/login
+    - /api/auth/register
+    - /api/auth/refresh
